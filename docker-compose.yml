@@ -1,0 +1,50 @@
+version: "3"
+
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django
+    volumes:
+      - ./src:/src
+    env_file:
+      - db_keys.txt
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    command: bash -c 'python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000'
+
+  db:
+    image: postgres:latest
+    container_name: postgres
+    env_file:
+      - db_keys.txt
+
+  adminer:
+    image: adminer
+    container_name: admin_db
+    ports:
+      - "8080:8080"
+
+  redis:
+    image: redis:latest
+    container_name: redis_db1
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_w
+    volumes:
+      - ./src:/src
+    env_file:
+      - db_keys.txt
+    depends_on:
+      - redis
+    ports:
+      - '5555:5555'
+    command: bash -c 'celery -A bookshop worker -l info -B -E'

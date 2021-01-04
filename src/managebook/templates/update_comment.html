@@ -1,0 +1,10 @@
+{% extends 'main_template.html' %}
+
+{% block comment %}
+<form action="{%  url 'update_comment' comment_id=id  %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Ok</button>
+</form>
+{% endblock %}
+

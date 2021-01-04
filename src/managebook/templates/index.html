@@ -1,0 +1,114 @@
+{% extends 'main_template.html' %}
+
+{% block index %}
+{% for p in count_page %}
+<a href="{% url 'hello_with_num_page' num_page=p %}"> page number {{ p }}</a>
+{% endfor %} <br>
+
+{% if user.is_authenticated %}
+<br> <h4><u> Logged as: {{ user }}</u><br><br>
+    <a href="{{ url }}">click here</a>
+<!--    <a href="{% url 'add_book' %}">Add a New Book</a>-->
+    <div id="ex1" class="modal">
+        <form onsubmit="add_book(this); return false;">
+            {{ book_form.title.label }}
+            {{ book_form.title }}
+            {{ book_form.text.label }}
+            {{ book_form.text }}
+            <p>{{ book_form.text.help_text }}</p>
+            <p>{{ book_form.genre.label }}</p>
+            {{ book_form.genre }}
+            <input type="submit" value="OK">
+            <a rel="modal:close" hidden>Close</a>
+        </form>
+<!--      <a href="#" rel="modal:close" hidden>Close</a>-->
+    </div>
+
+
+    <p><a class="btn" href="#ex1" rel="modal:open">Add a New Book</a></p>
+{% endif %}
+<!--div-->
+
+    <div class="book_container">
+    {% for book in content %}
+        <h1> {{ book.title }} </h1>
+        {% if book.is_owner %}
+        <p><a href="{% url 'delete_book_api' book_id=book.id %}">delete this book</a></p>
+        <p><a href="{% url 'update_book_api' slug=book.slug %}">update this book</a></p>
+        {% endif %}
+        <h5> {{ book.text }} </h5>
+
+        <div>
+            <h5> Rate: {{ book.cached_rate }} </h5>
+            {% for i in '0123456789'|make_list %}
+                {% if book.user_rate >= i %}
+                    <span class="book_rate fa fa-star checked" id="br-{{ book.id }}-{{ i }}"></span>
+                {% else %}
+                    <span class="book_rate fa fa-star" id="br-{{ book.id }}-{{ i }}"></span>
+                {% endif %}
+
+            {% endfor %}
+                 {% for u in book.rate.all %}
+                    <span>
+                        {{ u.username }}
+                    </span>
+                 {% endfor %}
+        </div>
+
+        <h5> Date: {{ book.publish_date }} </h5>
+        <h5> Authors: {% for author in book.author.all %}
+            {{ author.username }}
+            {% endfor %}</h5>
+        <h5> Genres: {% for genre in book.genre.all%}
+            {{ genre.title }}
+            {% endfor %}
+        </h5>
+
+        <div class="comment_container" id="{{ book.slug }}">
+        {% for c in book.comment.all %}
+            <div>
+                <h5>{{ c.text }}</h5>
+                <h5>Date: {{ c.date }}</h5>
+                <h5>Author: {{ c.user }}</h5>
+
+                <div>
+                    <span class="comment_like fa {% if c.is_liked %} fa-star checked {% endif %}" id="cl-{{ c.id }}">
+                        Like: {{ c.cashed_like }}
+                    </span>
+                            {% for u in c.like.all %}
+                                <span class="col">{{ u.username }}</span>
+                            {% endfor %}
+                </div>
+
+                {% if c.is_owner %}
+                    <p><a href="{% url 'update_comment' comment_id=c.id %}"> Update comment</a>
+                    <button class="delete-comment" id="dc-{{ c.id }}"> Delete comment </button>
+    <!--                <p><a href="{% url 'delete_comment' comment_id=c.id %}"> Delete comment</a>-->
+                {% endif %}
+            {% endfor %}
+            </div>
+
+
+            <hr>
+            {% if user.is_authenticated %}
+    <!--            <form action="{%  url 'add_comment' book_id=book.id %}" method="post">-->
+    <!--                {% csrf_token %}-->
+    <!--                {{ form }}-->
+    <!--                <button type="submit">Ok</button>-->
+    <!--            </form>-->
+
+                <div id="ex2" class="modal">
+                    <p>Put your comment below</p>
+                    <form onsubmit="add_comment(this, '{{ book.slug }}', '{{ book.id }}'); return false;">
+                    {{ comment_form }}
+                    <input type="submit" value="OK">
+                    <a rel="modal:close" hidden>Close</a>
+                    </form>
+                </div>
+                <p><a class="btn" href="#ex2" rel="modal:open">Add a New Comment</a></p>
+
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
