@@ -25,7 +25,7 @@ SECRET_KEY = 'o2ulf$9+mox(64*r-6kn#!-%%lgbg_46bw@p1!58!=#hs2u!r#'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['phoeux-task1.herokuapp.com', '127.0.0.1', '35.232.203.142', 'localhost']
+ALLOWED_HOSTS = ['phoeux-task1.herokuapp.com', '127.0.0.1', '35.232.203.142', 'localhost', '0.0.0.0']
 
 # Application definition
 
@@ -212,7 +212,7 @@ CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_BEAT_SCHEDULE = {
     "task_one": {
-        "task": "book.tasks.refresh_git_reps_num",
-        "schedule": 600.0,
+        "task": "managebook.tasks.refresh_git_reps_num",
+        "schedule": 10.0,
     },
 }

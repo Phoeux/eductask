@@ -1,8 +1,7 @@
 {% extends 'main_template.html' %}
 
 {% block login %}
-<a href="{% url 'social:begin' 'github' %}">Github</a>
-<a href="{% url 'social:begin' 'google' %}">Login with Google</a>
+
 {% for m in messages %}
     <h3 class="text-danger">{{ m }}</h3>
 {% endfor %}
@@ -13,5 +12,6 @@
     <button type="submit">Ok</button>
 </form>
 {% endblock %}
-
+<!--<a href="{% url 'social:begin' 'github' %}">Github</a>-->
+<!--<a href="{% url 'social:begin' 'google' %}">Login with Google</a>-->
 
