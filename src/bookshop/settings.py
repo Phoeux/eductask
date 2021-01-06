@@ -25,7 +25,7 @@ SECRET_KEY = 'o2ulf$9+mox(64*r-6kn#!-%%lgbg_46bw@p1!58!=#hs2u!r#'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['phoeux-task1.herokuapp.com', '127.0.0.1', '35.232.203.142', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['phoeux-task1.herokuapp.com', '127.0.0.1', '35.232.203.142', 'localhost', '0.0.0.0', '*']
 
 # Application definition
 
@@ -83,29 +83,24 @@ WSGI_APPLICATION = 'bookshop.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 """SQLite db"""
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR,'db.sqlite3'),
-#         # 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         # 'NAME': os.environ.get('NAME'),
-#         # 'USER': os.environ.get('USER'),
-#         # 'PASSWORD': os.environ.get('PASSWORD'),
-#         # 'HOST': os.environ.get('HOST'),
-#         # 'PORT': 5432,
-#
-#     }
-# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("POSTGRES_DB"),
-        'USER': os.environ.get("POSTGRES_USER"),
-        'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
-        'PORT': 5432,
-        'HOST': "db"
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR,'db.sqlite3'),
     }
 }
+
+"""Postgresql db"""
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': os.environ.get("POSTGRES_DB"),
+#         'USER': os.environ.get("POSTGRES_USER"),
+#         'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
+#         'PORT': 5432,
+#         'HOST': "db"
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -198,12 +193,12 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://dick://127.0.0.1:6379/1",
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://dick://127.0.0.1:6379/1",
+#     }
+# }
 
 CELERY_BROKER_URL = 'redis://redis:6379'
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
@@ -213,6 +208,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     "task_one": {
         "task": "managebook.tasks.refresh_git_reps_num",
-        "schedule": 10.0,
+        "schedule": 100.0,
     },
 }

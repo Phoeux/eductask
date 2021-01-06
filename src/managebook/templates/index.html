@@ -4,10 +4,16 @@
 {% for p in count_page %}
 <a href="{% url 'hello_with_num_page' num_page=p %}"> page number {{ p }}</a>
 {% endfor %} <br>
+<a href="{{ url }}">click here</a>
+
+{{ rep_name|safe }}
+
+{% include 'includes/test.html' with rep_name=context %}
+
 
 {% if user.is_authenticated %}
 <br> <h4><u> Logged as: {{ user }}</u><br><br>
-    <a href="{{ url }}">click here</a>
+
 <!--    <a href="{% url 'add_book' %}">Add a New Book</a>-->
     <div id="ex1" class="modal">
         <form onsubmit="add_book(this); return false;">

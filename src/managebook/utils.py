@@ -45,16 +45,7 @@ def XeroFirstAuth():
     return [json_response['access_token'], json_response['refresh_token']]
 
 
-def GitAuth(code):
-    url = f'https://github.com/login/oauth/access_token?client_id={GIT_CLIENT_ID}&client_secret={GIT_CLIENT_SECRET}&code={code}&redirect_uri={GIT_REDIRECT_URI}'
-    data = requests.post(url)
-    access_token = data.text.split("&")[0].split("=")[1]
-    response = requests.get("https://api.github.com/user",
-                            headers={
-                                'Authorization': f'token {access_token}',
-                                'Accept': 'application/json'
-                            })
-    login = response.json()['login']
+def GitAuth(login):
     data = requests.get(f'https://api.github.com/users/{login}/repos?page=1')
     rep_num = len(data.json())
     total_rep_num = rep_num
@@ -64,4 +55,22 @@ def GitAuth(code):
         page_num += 1
         rep_num = len(data.json())
         total_rep_num += rep_num
-    return total_rep_num
+    rep_name = ''
+    for i in data.json():
+        rep_name += (f"{i['name']} | <a href=https://api.github.com/repos/{login}/{i['name']}/zipball/>Скачать Zip</a><br>")
+        # f"<a href='{i}/'>{icecream_db[i]['name']}</a><br>"
+    context = {
+        'rep_name': rep_name,
+        'total_rep_num': total_rep_num
+    }
+    return context
+
+def GitReps(login):
+    data = requests.get(f'https://api.github.com/users/{login}/repos?page=1')
+    rep_name = ''
+    for i in data.json():
+        rep_name += f"{i['name']} "
+    context = {
+        'rep_name': rep_name}
+
+    return context

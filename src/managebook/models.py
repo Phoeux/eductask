@@ -9,7 +9,6 @@ class User(AbstractUser):
     git_repos_num = models.PositiveIntegerField(default=0)
 
 
-
 class Genre(models.Model):
     class Meta:
         verbose_name = 'Жанр'

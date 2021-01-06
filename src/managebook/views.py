@@ -9,6 +9,7 @@ from django.shortcuts import render, redirect
 from django.utils import cache
 from django.views.decorators.cache import cache_page
 from pytils.translit import slugify
+from requests import post, get
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication, SessionAuthentication
 from rest_framework.authtoken.models import Token
@@ -16,7 +17,7 @@ from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView, 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from bookshop.settings import GIT_CLIENT_ID, GIT_REDIRECT_URI, GIT_SCOPE
+from bookshop.settings import GIT_CLIENT_ID, GIT_REDIRECT_URI, GIT_SCOPE, GIT_CLIENT_SECRET
 from managebook.forms import BookForm, CommentForm, CustomUserCreateForm, CustomAuthenticationForm
 from managebook.models import BookLike, Book, CommentLike, Comment, Genre, User
 from django.views import View
@@ -28,7 +29,7 @@ from json import dumps, loads
 
 from managebook.serializer import CustomCommentSerializer, CommentSerializer, BookSerializer, CustomBookSerializer, \
     CustomRateSerializer
-from managebook.utils import XeroFirstAuth, GitAuth
+from managebook.utils import XeroFirstAuth, GitAuth, GitReps
 
 
 class BookView(View):
@@ -139,6 +140,7 @@ class DeleteBook(View):
             if request.user in book.author.all():
                 book.delete()
         return redirect('hello')
+
 
 class DeleteBookAPI(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
@@ -257,11 +259,13 @@ class AddBookRateAjax(CreateAPIView):
             return Response({'ok': True}, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class DeleteCommentAjax3(View):
     def delete(self, request, comment_id):
         if request.user.is_authenticated:
             Comment.objects.filter(id=comment_id, user=request.user).delete()
         return JsonResponse({'ok': True})
+
 
 class DeleteCommentAjax(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
@@ -276,6 +280,7 @@ class DeleteCommentAjax2(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (BasicAuthentication, SessionAuthentication)
     serializer_class = CustomCommentSerializer
+
     # queryset = Comment.objects
 
     # def get_queryset(self):
@@ -283,14 +288,11 @@ class DeleteCommentAjax2(DestroyAPIView):
     #     return queryset
 
     def delete(self, request, comment_id):
-
         serializer = self.serializer_class(data=comment_id)
         # user = request.user
         # if serializer.is_valid():
         serializer.delete(user=request.user, id=comment_id)
         return Response({'ok': True}, status=status.HTTP_204_NO_CONTENT)
-
-
 
     # def delete2(self, request, comment_id):
     #     Comment.objects.filter(id=comment_id).delete()
@@ -344,6 +346,7 @@ class AddNewBookAjax2(View):
         # print(loads(request.POST['genre']))
         return JsonResponse({'ok': True})
 
+
 class AddNewBookAjax(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (BasicAuthentication, SessionAuthentication)
@@ -357,19 +360,20 @@ class AddNewBookAjax(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class AddNewCommentAjax2(View):
     def post(self, request):
         if request.user.is_authenticated:
             book = Book.objects.get(slug=request.POST['slug'])
             Comment.objects.create(text=request.POST['text'], user=request.user, book=book)
         # print(request.POST['text'])
-        return JsonResponse({'ok': True}) #может быть другой ответ
+        return JsonResponse({'ok': True})  # может быть другой ответ
+
 
 class AddNewCommentAjax(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (BasicAuthentication, SessionAuthentication)
     serializer_class = CustomCommentSerializer
+
     # queryset = Comment.objects.all()
 
     def post(self, request):
@@ -388,19 +392,17 @@ class AddNewCommentAjax(CreateAPIView):
         # return JsonResponse({'ok': True})
         # return self.create(request, *args, **kwargs)
 
-
-
     # def post(self, request, *args, **kwargs):
     #     c = Comment(id=request.POST['book'], text=request.POST['text'], user=request.POST['user'])
     #     c.save()
     #     return JsonResponse({'ok': True})
-
 
     # def post(self, request, *args, **kwargs):
     #     return self.create(request, *args, **kwargs)
 
     # def get_object(self):
     #     return Book.objects.get(id=self.kwargs.get('id'))
+
 
 class CommentListApi(ListAPIView):
     serializer_class = CommentSerializer
@@ -409,6 +411,7 @@ class CommentListApi(ListAPIView):
     class Meta:
         model = Comment
         fields = '__all__'
+
 
 class BookListApi(ListAPIView):
     serializer_class = BookSerializer
@@ -421,10 +424,23 @@ class BookListApi(ListAPIView):
 
 class GitRepos(View):
     def get(self, request):
+        code = request.GET['code']
+        url = f'https://github.com/login/oauth/access_token?client_id={GIT_CLIENT_ID}&client_secret={GIT_CLIENT_SECRET}&code={code}&redirect_uri={GIT_REDIRECT_URI}'
+        data = post(url)
+        access_token = data.text.split("&")[0].split("=")[1]
+        response = get("https://api.github.com/user",
+                       headers={
+                           'Authorization': f'token {access_token}',
+                           'Accept': 'application/json'
+                       })
+        git_username = response.json()['login']
         if request.user.is_authenticated:
-            number = GitAuth(request.GET['code'])
-            return HttpResponse(str(number))
-
-
+            context = GitAuth(git_username)
+            request.user.git_username = git_username
+            request.user.git_repos_num = context['total_rep_num']
+            request.user.save()
+            # return JsonResponse(context)
+            return render(request, 'rep_list.html', context)
+        return JsonResponse(GitAuth(git_username))
 
 
