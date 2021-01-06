@@ -143,6 +143,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 INTERNAL_IPS = [
     '127.0.0.1',
+    '192.168.0.104'
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -173,7 +174,7 @@ GIT_CLIENT_ID = '6328933134213f2cacff'
 GIT_CLIENT_SECRET = '4449af77867e6e68b07aaaa81b51b76c3d439596'
 GIT_SCOPE = 'read:user'
 
-GIT_REDIRECT_URI = 'http://127.0.0.1:8000/complete/github'
+GIT_REDIRECT_URI = 'http://192.168.0.104:8000/complete/github'
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [

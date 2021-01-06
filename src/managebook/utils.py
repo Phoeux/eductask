@@ -65,12 +65,15 @@ def GitAuth(login):
     }
     return context
 
-def GitReps(login):
-    data = requests.get(f'https://api.github.com/users/{login}/repos?page=1')
-    rep_name = ''
-    for i in data.json():
-        rep_name += f"{i['name']} "
-    context = {
-        'rep_name': rep_name}
+def GetApi():
+    pass
 
-    return context
+# def GitReps(login):
+#     data = requests.get(f'https://api.github.com/users/{login}/repos?page=1')
+#     rep_name = ''
+#     for i in data.json():
+#         rep_name += f"{i['name']} "
+#     context = {
+#         'rep_name': rep_name}
+#
+#     return context

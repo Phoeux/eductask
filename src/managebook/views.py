@@ -29,7 +29,7 @@ from json import dumps, loads
 
 from managebook.serializer import CustomCommentSerializer, CommentSerializer, BookSerializer, CustomBookSerializer, \
     CustomRateSerializer
-from managebook.utils import XeroFirstAuth, GitAuth, GitReps
+from managebook.utils import XeroFirstAuth, GitAuth
 
 
 class BookView(View):
