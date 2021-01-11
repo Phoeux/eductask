@@ -16,7 +16,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from bookshop.settings import GIT_CLIENT_ID, GIT_REDIRECT_URI, GIT_SCOPE, GIT_CLIENT_SECRET
 from managebook.forms import BookForm, CommentForm, CustomUserCreateForm, CustomAuthenticationForm
 from managebook.models import BookLike, Book, CommentLike, Comment, Genre, User
@@ -438,11 +437,9 @@ class GitRepos(View):
         context['code'] = code
         context['login'] = git_username
         if request.user.is_authenticated:
-
             request.user.git_username = git_username
             request.user.git_repos_num = context['total_rep_num']
             request.user.save()
-
             # return JsonResponse(context)
             return render(request, 'rep_list.html', context)
         return render(request, 'rep_list.html', context)
