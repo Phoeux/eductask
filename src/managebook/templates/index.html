@@ -6,9 +6,9 @@
 {% endfor %} <br>
 <a href="{{ url }}">click here</a>
 
-{{ rep_name|safe }}
+{{ context }}
 
-{% include 'includes/test.html' with rep_name=context %}
+{% include 'includes/test.html' with a='c12e' %}
 
 
 {% if user.is_authenticated %}

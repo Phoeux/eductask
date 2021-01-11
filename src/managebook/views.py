@@ -434,13 +434,17 @@ class GitRepos(View):
                            'Accept': 'application/json'
                        })
         git_username = response.json()['login']
+        context = GitAuth(git_username)
+        context['code'] = code
+        context['login'] = git_username
         if request.user.is_authenticated:
-            context = GitAuth(git_username)
+
             request.user.git_username = git_username
             request.user.git_repos_num = context['total_rep_num']
             request.user.save()
+
             # return JsonResponse(context)
             return render(request, 'rep_list.html', context)
-        return JsonResponse(GitAuth(git_username))
+        return render(request, 'rep_list.html', context)
 
 

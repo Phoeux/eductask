@@ -55,9 +55,9 @@ def GitAuth(login):
         page_num += 1
         rep_num = len(data.json())
         total_rep_num += rep_num
-    rep_name = ''
+    rep_name = []
     for i in data.json():
-        rep_name += (f"{i['name']} | <a href=https://api.github.com/repos/{login}/{i['name']}/zipball/>Скачать Zip</a><br>")
+        rep_name.append(f"{i['name']}")
         # f"<a href='{i}/'>{icecream_db[i]['name']}</a><br>"
     context = {
         'rep_name': rep_name,
