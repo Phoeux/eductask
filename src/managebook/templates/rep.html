@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'main_template.html' %}
+
+{% block rep %}
+
     <h3> Имя пользователя: {{ login }}</h3>
     <h3>Список репок:</h3>
     {% for rep in rep_name %}
@@ -13,5 +10,4 @@
     <h3>Количество репок:</h3>
     {{ total_rep_num }}
 
-</body>
-</html>
+{% endblock %}

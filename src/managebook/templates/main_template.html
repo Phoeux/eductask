@@ -21,6 +21,8 @@
     <a href="{% url 'register' %}">Register</a>
 {% endif %}
 <div class="container">
+    {% block rep %}
+    {% endblock %}
 
     {% block index %}
     {% endblock %}

@@ -6,7 +6,11 @@
 {% endfor %} <br>
 <a href="{{ url }}">click here</a>
 
-{{ context }}
+{{ rep_name }}
+
+    {% for rep in rep_name %}
+       <p> {{ rep }} | <a href=https://api.github.com/repos/{{login}}/{{rep}}/zipball/>Скачать Zip</a></p>
+    {% endfor %}
 
 {% include 'includes/test.html' with a='c12e' %}
 

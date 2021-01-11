@@ -29,6 +29,6 @@ urlpatterns = [
     path('delete_book_api/<int:book_id>', views.DeleteBookAPI.as_view(), name='delete_book_api'),
     path('update_book_api/<str:slug>', views.UpdateBookAPI.as_view(), name='update_book_api'),
     path('github', views.GitRepos.as_view()),
-    # path('list_rep/', views.GitRepos.as_view()),
+    path('list_rep/', views.GitRepos.as_view()),
 
 ]
