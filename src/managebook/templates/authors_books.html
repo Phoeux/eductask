@@ -1,0 +1,54 @@
+{% extends 'main_template.html' %}
+
+{% block authors_books %}
+
+
+        <a href="{% url 'hello' %}">Главная</a>
+
+        {% for name in context %}
+        <h3>Список книг автора: {{ name.username }}</h3>
+        <b>  Whole price: {{ name.whole_price }} </b>   <br>
+            {% for book in name.books %}
+                Book title: {{ book.title  }} <br>
+                Book price: {{ book.price  }} <br>
+                Book text: {{ book.text | safe }} <br><br>
+            {% endfor %}
+        {% endfor %}
+
+<!--        {% for name in context %}-->
+
+<!--        <h3>Список книг автора: {{ name.req_auth }}</h3>-->
+<!--        <b>  Whole price: {{ name.price }} </b>   <br>-->
+<!--            {% for book in name.authors_books %}-->
+<!--                Book title: {{ book.title  }} <br>-->
+<!--                Book price: {{ book.price  }} <br>-->
+<!--                Book text: {{ book.text | safe }} <br><br>-->
+<!--            {% endfor %}-->
+<!--        {% endfor %}-->
+<!--                {% for item in all_users_prices %}-->
+<!--                    {% for it_key, it_val in item.items %}-->
+<!--                        <h3>      {{ it_key }} : {{ it_val }}  </h3><br>-->
+<!--                    {% endfor %}-->
+<!--                {% endfor %}-->
+
+<!--        {% for pr in whole_price %}-->
+<!--         <b>  Whole price: {{ pr }} </b>   <br>-->
+<!--        {% endfor %}-->
+
+<!--        {% for book_list in authors_books %}-->
+<!--            {% for book in book_list %}-->
+<!--               Book title: {{ book.title  }} <br>-->
+<!--               Book text: {{ book.text | safe }} <br><br>-->
+<!--            {% endfor %}-->
+<!--        {% endfor %}-->
+
+
+<!--    <br><br>-->
+
+<!--        {% for items in book_num %}-->
+<!--            {% for user_name, user_val in items.items %}-->
+<!--                {{ user_name }}: {{ user_val }}<br>-->
+<!--            {% endfor %}-->
+<!--        {% endfor %}-->
+
+{% endblock %}

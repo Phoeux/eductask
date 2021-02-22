@@ -1,4 +1,3 @@
-# from django.contrib.auth.models import User
 from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
@@ -11,15 +10,6 @@ class CommentSerializer(ModelSerializer):
         model = Comment
         fields = ['book', 'text']
 
-    # def create(self, validated_data):
-    #     comm = Comment.objects.create(**validated_data)
-    #     comm.save()
-    #     return Comment.objects.create(**validated_data)
-
-    # def save(self,*args, **kwargs):
-    #     self.Comment.user.save()
-    #     super().save(*args, **kwargs)
-
 
 class CustomCommentSerializer(Serializer):
     book_id = serializers.IntegerField()
@@ -28,19 +18,11 @@ class CustomCommentSerializer(Serializer):
     def create(self, validated_data):
         return Comment.objects.create(**validated_data)
 
-    # def save(self, user, *args, **kwargs):
-    #     return Comment.objects.create(**self.validated_data, user=user)
 
-    # def delete(self, user, id):
-    #     return Comment.objects.delete(user=user, id=id)
-
-    # def delete(self, user, comment_id):
-    #     # comment = validated_data['comment_id']
-    #     return Comment.objects.filter(id=comment_id, user=user).delete()
-
-    # super().save(request, *args, **kwargs)
-    # book = self.validated_data['id']
-    # text = self.validated_data['text']
+class UserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 
 class BookSerializer(ModelSerializer):
@@ -52,12 +34,15 @@ class BookSerializer(ModelSerializer):
 class GenreSerializer(ModelSerializer):
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ['title']
 
-class UserSerializer(ModelSerializer):
+
+class AuthorBooksSerializer(ModelSerializer):
+    books = BookSerializer(many=True)
+
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id', 'username', 'books']
 
 
 class CustomBookSerializer(Serializer):
@@ -75,10 +60,6 @@ class CustomBookSerializer(Serializer):
         b.save()
         return b
 
-    # def save(self, user, *args, **kwargs):
-    #     author = user
-    #     return Book.objects.create(**self.validated_data, author=author)
-
 
 class CustomRateSerializer(Serializer):
     book_id = serializers.IntegerField()
@@ -87,5 +68,25 @@ class CustomRateSerializer(Serializer):
     def create(self, validated_data):
         return BookLike.objects.create(**validated_data)
 
-    # def save(self, user, *args, **kwargs):
-    #     return BookLike.objects.create(**self.validated_data, user=user)
+
+class UserAPISerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username']
+
+
+class BookAPISerializer(serializers.ModelSerializer):
+    author = UserAPISerializer(many=True)
+    genre = GenreSerializer(many=True)
+
+    class Meta:
+        model = Book
+        fields = ['id', 'title', 'text', 'author', 'genre']
+
+
+class AuthorBooksAPISerializer(ModelSerializer):
+    books = BookAPISerializer(many=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'books']

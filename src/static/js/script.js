@@ -12,9 +12,10 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
 const csrftoken = getCookie('csrftoken');
 
-function add_book(form){
+function add_book(form) {
     let title = form.title.value;
     let text = form.text.value;
     let arr_genre = JSON.stringify($(form.genre).val());
@@ -24,10 +25,10 @@ function add_book(form){
         url: '/shop/add_new_book_ajax/',
         method: 'post',
         data: {
-                'csrfmiddlewaretoken': csrftoken,
-                'title': title,
-                'text': text,
-                'genre': arr_genre
+            'csrfmiddlewaretoken': csrftoken,
+            'title': title,
+            'text': text,
+            'genre': arr_genre
         },
         success: function (data) {
             $('div.book_container').append(`<h1>${title}</h1> <h5>${text}</h5>`)
@@ -35,7 +36,7 @@ function add_book(form){
     })
 }
 
-function add_comment(form, slug, id)  {
+function add_comment(form, slug, id) {
     let text = form.text.value;
 
     console.log(text, slug);
@@ -48,18 +49,60 @@ function add_comment(form, slug, id)  {
             'book_id': id,
         },
         success: function (data) {
-            $('#'+slug).append(`${text}`)
+            $('#' + slug).append(`${text}`)
         }
     })
 }
 
 
+function author_book_search() {
+    var author_id = "";
+    $(":checkbox").each(function () {
+        var ischecked = $(this).is(":checked");
+        if (ischecked) {
+            author_id += $(this).val();
+        }
+    });
+    // let object_this = this
+
+    // author_id = $(".author_id:checked").val()
+
+    console.log(author_id);
+    $.ajax({
+        url: '/shop/author_books_ajax/',
+        method: 'get',
+        data: {
+            'author_id': author_id
+        },
+        success: function (data) {
+            // console.log($(".selector").data('username'));
+            console.log(data);
+            // console.log(data);
+            var dataStr = JSON.stringify(data);
+
+            alert(data[0]);
+
+            $('div.author_book_search').append(`${data['whole_price']}`);
+
+            // $('div.author_book_search').html(data);
+
+            // $(object_this).html(` user: ${data['whole_price']}`);
+
+            // var ds = $.parseJSON(data);
+            // result = ds;
+            // console.log(result);
+        }
+    })
+
+
+}
+
 $('document').ready(function () {
-    $('span.comment_like').on('click', function() {
+    $('span.comment_like').on('click', function () {
         let cl_id = $(this).attr('id');
         let object_comment = this;
         $.ajax({
-            url:'/shop/add_like_ajax/',
+            url: '/shop/add_like_ajax/',
             data: {'cl_id': cl_id, 'csrfmiddlewaretoken': csrftoken},
             method: 'post',
             success: function (data) {
@@ -83,36 +126,36 @@ $('document').ready(function () {
     });
 
     $('span.book_rate').on('click', function () {
-    let arr = $(this).attr('id').split('-');
+        let arr = $(this).attr('id').split('-');
         let book_id = arr[1];
         let book_rate = arr[2];
         let obj = this;
-        $.ajax ({
+        $.ajax({
             url: '/shop/add_book_rate_ajax/',
             method: 'post',
             data: {'book_id': book_id, 'rate': book_rate, 'csrfmiddlewaretoken': csrftoken},
-            success:function(data) {
+            success: function (data) {
                 let rate = $(obj).parent();
                 let children = $(rate).children();
                 let text = children[0];
                 $(text).html(`Rate: ${data['cached_rate']}`);
-                for (let i = 1; i <= 10; i++){
-                    if (data['rate']  >= i - 1) {
-                       $(children[i]).attr('class', 'book_rate fa fa-star checked')
+                for (let i = 1; i <= 10; i++) {
+                    if (data['rate'] >= i - 1) {
+                        $(children[i]).attr('class', 'book_rate fa fa-star checked')
                     } else {
-                       $(children[i]).attr('class', 'book_rate fa fa-star')
-                        }
+                        $(children[i]).attr('class', 'book_rate fa fa-star')
+                    }
                 }
-                   if (data['flag']){
-                        $(rate).append(`<span>${data['user']}</span>`)
-                        }
+                if (data['flag']) {
+                    $(rate).append(`<span>${data['user']}</span>`)
+                }
 
             }
 
         })
     })
 
-    $('button.delete-comment').on('click', function (){
+    $('button.delete-comment').on('click', function () {
         let id = $(this).attr('id').split('-')[1];
         let obj = this;
         $.ajax({
@@ -124,6 +167,7 @@ $('document').ready(function () {
             }
         })
     });
+
 
 //    $('a.add_new_book').on('click', function() {
 //        let arr = $(this).parent().children();

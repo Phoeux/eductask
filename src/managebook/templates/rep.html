@@ -1,11 +1,12 @@
 {% extends 'main_template.html' %}
+"""страница под общий стиль"""
 
 {% block rep %}
 
     <h3> Имя пользователя: {{ login }}</h3>
     <h3>Список репок:</h3>
     {% for rep in rep_name %}
-       <p> {{ rep }} | <a href=https://api.github.com/repos/{{login}}/{{rep}}/zipball/>Скачать Zip</a></p>
+       <p> {{ rep }} | <a href=https://api.github.com/repos/{{login}}/{{rep}}/zipball/rep1.html>Скачать Zip</a></p>
     {% endfor %}
     <h3>Количество репок:</h3>
     {{ total_rep_num }}
