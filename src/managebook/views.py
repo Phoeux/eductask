@@ -1,40 +1,37 @@
-from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth.models import User
+from datetime import datetime
+from json import loads
+
+from django.contrib import messages
+from django.contrib.auth import login, logout
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, Q, CharField, Value, OuterRef, Exists, Prefetch
+from django.db.models import Count, CharField, OuterRef, Exists, Prefetch, Sum
 from django.db.models.functions import Cast
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.utils import cache
-from django.views.decorators.cache import cache_page
+from django.views import View
 from pytils.translit import slugify
 from requests import post, get
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication, SessionAuthentication
-from rest_framework.authtoken.models import Token
-from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView, UpdateAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from bookshop.settings import GIT_CLIENT_ID, GIT_REDIRECT_URI, GIT_SCOPE, GIT_CLIENT_SECRET
 from managebook.forms import BookForm, CommentForm, CustomUserCreateForm, CustomAuthenticationForm
 from managebook.models import BookLike, Book, CommentLike, Comment, Genre, User
-from django.views import View
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib import messages
-from datetime import datetime
-from django.utils.decorators import method_decorator
-from json import dumps, loads
-
 from managebook.serializer import CustomCommentSerializer, CommentSerializer, BookSerializer, CustomBookSerializer, \
-    CustomRateSerializer
-from managebook.utils import XeroFirstAuth, GitAuth
+    CustomRateSerializer, BookAPISerializer, AuthorBooksAPISerializer
+from managebook.utils import GitAuth
 
 
 class BookView(View):
     # @method_decorator(cache_page(5))
+    # @permission_required('managebook.is_owner')
     def get(self, request, num_page=1):
         response = {'form': CommentForm()}
+
         if request.user.is_authenticated:
             sub_query_1 = BookLike.objects.filter(user=request.user, book=OuterRef('pk')).values('rate')
             sub_query_2 = Exists(User.objects.filter(id=request.user.id, book=OuterRef('pk')))
@@ -54,9 +51,122 @@ class BookView(View):
         response['count_page'] = list(range(1, pag.num_pages + 1))
         response['book_form'] = BookForm()
         response['comment_form'] = CommentForm()
+        response['author'] = User.objects.all()
         response['url'] = f'https://github.com/login/oauth/authorize?client_id={GIT_CLIENT_ID}' \
                           f'&redirect_uri={GIT_REDIRECT_URI}&scope={GIT_SCOPE}'
         return render(request, 'index.html', response)
+
+
+class AuthorsBooks(View):
+    def get(self, request, author_id):
+        context = []
+        author_id_split = author_id.split(',')
+        for id in author_id_split:
+            users_data = {}
+            req_auth = get_object_or_404(User, id__in=id)
+            authors_books = Book.objects.filter(author=req_auth)
+            price = authors_books.annotate(whole_price=Sum('price')).aggregate(Sum('whole_price'))['whole_price__sum']
+            # all_users_prices = list(map(lambda x: {x["username"]: x["whole_price"]},
+            #                             User.objects.annotate(whole_price=Sum("books__price")).values("whole_price",
+            #                                                                                  "username")))
+            all_users_prices = User.objects.annotate(whole_price=Sum("books__price"), count_book=Count('books')).values(
+                "whole_price", "username", 'count_book')
+            # book_num = map(lambda x: {x['username']: x['book_num']},
+            #                User.objects.annotate(book_num=Count('book')).values('book_num', 'username'))
+            users_data.update(req_auth=req_auth)
+            # users_data.update(book_num=book_num)
+            users_data.update(price=price)
+            users_data.update(authors_books=authors_books)
+            # users_data.update(all_users_prices=all_users_prices)
+            context.append(users_data)
+            # context.append(all_users_prices)
+        return render(request, 'authors_books.html',
+                      {"context": context, 'all_users_prices': all_users_prices})  # , content_type="text/strings")
+
+
+class AuthorsBooks2(View):
+    def get(self, request, author_id):
+        context = {}
+        auth_list = []
+        authors_books_list = []
+        price_list = []
+        # all_users_prices_list = []
+        author_id_split = author_id.split(',')
+        for id in author_id_split:
+            req_auth = User.objects.filter(id__in=id)
+            auth_list.append(req_auth[0])
+            authors_books = Book.objects.filter(author=req_auth[0])
+            authors_books_list.append(authors_books)
+
+            price = authors_books.annotate(whole_price=Sum('price')).aggregate(Sum('whole_price'))['whole_price__sum']
+            price_list.append(price)
+
+            all_users_prices = list(map(lambda x: {x["username"]: x["whole_price"]},
+                                        User.objects.annotate(whole_price=Sum("books__price")).values("whole_price",
+                                                                                                      "username")))
+            # all_users_prices_list.append(all_users_prices)
+            book_num = list(map(lambda x: {x['username']: x['book_num']},
+                                User.objects.annotate(book_num=Count('book')).values('book_num', 'username')))
+            context.update(req_auth=auth_list)
+            context.update(price=price_list)
+            context.update(authors_books=authors_books_list)
+
+            context.update(book_num=book_num)
+            context.update(all_users_prices=all_users_prices)
+        return render(request, 'authors_books.html', context)  # , content_type="text/strings")
+        # return context
+
+
+class AuthorsBooks3(View):
+    def get(self, request, author_id=None):
+        context = []
+        author_id_split = []
+        data = list(request.get_full_path().split('/')[-1])
+        for author_id in data:
+            if author_id.isdigit():
+                author_id_split.append(author_id)
+        if author_id is not None:
+            # author_id_split = author_id.split(',')
+            aggregated_users_data = User.objects.filter(id__in=author_id_split).prefetch_related("books").annotate(
+                whole_price=Sum("books__price"), count_book=Count('books'))
+        else:
+            aggregated_users_data = User.objects.all().prefetch_related("books").annotate(
+                whole_price=Sum("books__price"), count_book=Count('books'))
+        for user in aggregated_users_data:
+            users_data = {}
+            users_data.update(whole_price=user.whole_price)
+            users_data.update(count_book=user.count_book)
+            users_data.update(username=user.username)
+            users_data.update(
+                books=[{"title": book.title, "text": book.text, 'price': book.price} for book in user.books.all()])
+            context.append(users_data)
+        return render(request, 'authors_books.html', {"context": context})
+
+
+class AuthorsBooks3Ajax(View):
+    def get(self, request, author_id=None):
+        context = []
+        author_id_split = []
+        data = list(request.get_full_path().split('_')[-1])
+        for author_id in data:
+            if author_id.isdigit():
+                author_id_split.append(author_id)
+        if author_id is not None:
+            # author_id_split = author_id.split(',')
+            aggregated_users_data = User.objects.filter(id__in=author_id_split).prefetch_related("books").annotate(
+                whole_price=Sum("books__price"), count_book=Count('books'))
+        else:
+            aggregated_users_data = User.objects.all().prefetch_related("books").annotate(
+                whole_price=Sum("books__price"), count_book=Count('books'))
+        for user in aggregated_users_data:
+            users_data = {}
+            users_data.update(whole_price=user.whole_price)
+            users_data.update(count_book=user.count_book)
+            users_data.update(username=user.username)
+            users_data.update(
+                books=[{"title": book.title, "text": book.text, 'price': book.price} for book in user.books.all()])
+            context.append(users_data)
+        return JsonResponse({"context": context})
 
 
 class AddRateBook(View):
@@ -119,6 +229,7 @@ class AddNewBook(View):
     def post(self, request):
         book = BookForm(data=request.POST)
         if book.is_valid():
+            # book.save()
             nb = book.save(commit=False)
             nb.slug = slugify(nb.title)
             try:
@@ -147,9 +258,7 @@ class DeleteBookAPI(DestroyAPIView):
 
     def delete(self, request, book_id):
         Book.objects.filter(id=book_id, author=request.user).delete()
-        # return Book.objects.filter(id=book_id, author=request.user).delete()
         return Response({'ok': True}, status=status.HTTP_204_NO_CONTENT)
-        # return redirect('hello')
 
 
 class UpdateBook(View):
@@ -248,12 +357,8 @@ class AddBookRateAjax(CreateAPIView):
     serializer_class = CustomRateSerializer
 
     def post(self, request):
-        # print('reqdata', request.data)
         serializer = self.serializer_class(data=request.data)
-        # print('serdata', serializer)
-        # print(request.user)
         if serializer.is_valid():
-            # print(serializer.is_valid())
             serializer.save(user=request.user)
             return Response({'ok': True}, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -280,49 +385,10 @@ class DeleteCommentAjax2(DestroyAPIView):
     authentication_classes = (BasicAuthentication, SessionAuthentication)
     serializer_class = CustomCommentSerializer
 
-    # queryset = Comment.objects
-
-    # def get_queryset(self):
-    #     queryset = Comment.objects.filter(id=self.kwargs['pk'], user=self.request.user)
-    #     return queryset
-
     def delete(self, request, comment_id):
         serializer = self.serializer_class(data=comment_id)
-        # user = request.user
-        # if serializer.is_valid():
         serializer.delete(user=request.user, id=comment_id)
         return Response({'ok': True}, status=status.HTTP_204_NO_CONTENT)
-
-    # def delete2(self, request, comment_id):
-    #     Comment.objects.filter(id=comment_id).delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # def destroy(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     self.perform_destroy(instance)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
-    #
-    # def perform_destroy(self, instance):
-    #     instance.delete()
-
-    # def get_object(self, comment_id):
-    #     try:
-    #         return Comment.objects.get(id=comment_id)
-    #     except Comment.DoesNotExist:
-    #         raise Http404
-    #
-    # def delete(self, request, comment_id):
-    #     comment = self.get_object(comment_id)
-    #     comment.delete()
-    #     return Response({'ok': True}, status=status.HTTP_204_NO_CONTENT)
-
-    # def delete(self, request, *args, **kwargs):
-    #     try:
-    #         instance = self.get_object()
-    #         self.perform_destroy(instance)
-    #     except Http404:
-    #         pass
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AddNewBookAjax2(View):
@@ -340,9 +406,6 @@ class AddNewBookAjax2(View):
                 req_g = Genre.objects.get(id=g)
                 b.genre.add(req_g)
             b.save()
-        # print(request.POST['title'])
-        # print(request.POST['text'])
-        # print(loads(request.POST['genre']))
         return JsonResponse({'ok': True})
 
 
@@ -364,7 +427,6 @@ class AddNewCommentAjax2(View):
         if request.user.is_authenticated:
             book = Book.objects.get(slug=request.POST['slug'])
             Comment.objects.create(text=request.POST['text'], user=request.user, book=book)
-        # print(request.POST['text'])
         return JsonResponse({'ok': True})  # может быть другой ответ
 
 
@@ -376,31 +438,11 @@ class AddNewCommentAjax(CreateAPIView):
     # queryset = Comment.objects.all()
 
     def post(self, request):
-        # print("REQUEST DATA", request.data)
         serializer = self.serializer_class(data=request.data)
-        # print('SER DATA', serializer)
-        # print(request.user)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            # print('COM SAVE', comment_saved.text)
-            # print(f"Success. Comment {comment_saved.text} created succesfully.")
             return Response({'ok': True}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # book = Book.objects.get(id=request.POST['id'])
-        # Comment.objects.create(text=request.POST['text'], user=request.user, book=book)
-        # return JsonResponse({'ok': True})
-        # return self.create(request, *args, **kwargs)
-
-    # def post(self, request, *args, **kwargs):
-    #     c = Comment(id=request.POST['book'], text=request.POST['text'], user=request.POST['user'])
-    #     c.save()
-    #     return JsonResponse({'ok': True})
-
-    # def post(self, request, *args, **kwargs):
-    #     return self.create(request, *args, **kwargs)
-
-    # def get_object(self):
-    #     return Book.objects.get(id=self.kwargs.get('id'))
 
 
 class CommentListApi(ListAPIView):
@@ -440,8 +482,15 @@ class GitRepos(View):
             request.user.git_username = git_username
             request.user.git_repos_num = context['total_rep_num']
             request.user.save()
-            # return JsonResponse(context)
             return render(request, 'rep.html', context)
-        return render(request, 'rep_list.html', context)
+        return render(request, 'rep.html', context)
 
 
+class AllBooksApi(viewsets.ModelViewSet):
+    queryset = Book.objects
+    serializer_class = BookAPISerializer
+
+
+class AuthorBooksAPI(viewsets.ModelViewSet):
+    serializer_class = AuthorBooksAPISerializer
+    queryset = User.objects.all()

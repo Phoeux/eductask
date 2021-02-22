@@ -4,20 +4,28 @@
 {% for p in count_page %}
 <a href="{% url 'hello_with_num_page' num_page=p %}"> page number {{ p }}</a>
 {% endfor %} <br>
-<a href="{{ url }}">click here</a>
 
-{{ rep_name }}
+<a href="{{ url }}"> Github repo's list of user</a>
 
-    {% for rep in rep_name %}
-       <p> {{ rep }} | <a href=https://api.github.com/repos/{{login}}/{{rep}}/zipball/>Скачать Zip</a></p>
-    {% endfor %}
 
-{% include 'includes/test.html' with a='c12e' %}
+<!--{% include 'includes/test.html' with a='c12e' %}-->
 
+<div class="author_book_search">
+    <br>
+<!--    <form action="/shop/author_books/" method="get">-->
+    <form onsubmit="author_book_search(this); return false;">
+
+        {% for author_id in author %}
+             <input type="checkbox" class='author_id' value="{{ author_id.id }}">{{ author_id }} <br>
+        {% endfor %}
+        <p><input type="submit" value="Отправить"></p>
+
+    </form>
+
+</div>
 
 {% if user.is_authenticated %}
 <br> <h4><u> Logged as: {{ user }}</u><br><br>
-
 <!--    <a href="{% url 'add_book' %}">Add a New Book</a>-->
     <div id="ex1" class="modal">
         <form onsubmit="add_book(this); return false;">

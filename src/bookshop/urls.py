@@ -22,7 +22,8 @@ urlpatterns = [
     path('', lambda req: redirect('/shop/hello/')),
     path('admin/', admin.site.urls),
     path('shop/', include('managebook.urls'), name='managebook'),
-    path("complete/", include("managebook.urls"))
+    path("complete/", include("managebook.urls")),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # path('', include('social_django.urls', namespace='social'))
 ]
 

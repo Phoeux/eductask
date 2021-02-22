@@ -5,9 +5,9 @@ from django.db.models import Avg
 
 
 class User(AbstractUser):
-    git_username = models.CharField(max_length=40, default=None, null=True)
-    git_repos_num = models.PositiveIntegerField(default=0)
-
+    git_username = models.CharField(max_length=40, blank=True, default=None, null=True)
+    git_repos_num = models.PositiveIntegerField(default=0, blank=True)
+    books = models.ManyToManyField('Book', verbose_name="книга", db_index=True, related_name='authors_books')
 
 class Genre(models.Model):
     class Meta:
@@ -22,6 +22,10 @@ class Genre(models.Model):
 
 class Book(models.Model):
     class Meta:
+        permissions = (
+            ('hide_comments', 'скрыть комменты'),
+            ('is_owner', 'Владелец'),
+        )
         verbose_name = 'Книга'
         verbose_name_plural = 'Книги'
 
@@ -39,6 +43,7 @@ class Book(models.Model):
     genre = models.ManyToManyField('managebook.Genre', verbose_name='жанр')
     rate = models.ManyToManyField(User, through='managebook.BookLike', related_name='rate')
     cached_rate = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    price = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title if self.title is not None else 'name is not defined'

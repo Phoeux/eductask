@@ -1,10 +1,15 @@
-from django.urls import path
+from django.urls import path, include
 from django.views.decorators.cache import cache_page
+from rest_framework.routers import DefaultRouter
 
 from managebook import views
 
+router = DefaultRouter()
+router.register('all_books', views.AllBooksApi)
+router.register('all_author_books', views.AuthorBooksAPI)
 
 urlpatterns = [
+    path('api/', include(router.urls)),
     # path('hello/', cache_page(2)(views.BookView.as_view()), name='hello'),
     path('hello/', views.BookView.as_view(), name='hello'),
     path('hello/<int:num_page>', views.BookView.as_view(), name='hello_with_num_page'),
@@ -24,11 +29,17 @@ urlpatterns = [
     path('delete_comment_ajax/<int:comment_id>', views.DeleteCommentAjax.as_view()),
     path('add_new_book_ajax/', views.AddNewBookAjax.as_view(), name='add_new_book_ajax'),
     path('add_new_comment_ajax/', views.AddNewCommentAjax.as_view()),
+
     path('com_list_api/', views.CommentListApi.as_view()),
     path('book_list_api/', views.BookListApi.as_view(), name='book_list_api'),
     path('delete_book_api/<int:book_id>', views.DeleteBookAPI.as_view(), name='delete_book_api'),
     path('update_book_api/<str:slug>', views.UpdateBookAPI.as_view(), name='update_book_api'),
     path('github', views.GitRepos.as_view()),
-    path('list_rep/', views.GitRepos.as_view()),
+    # path('authors_books_api/', views.AuthorBooksAPI.as_view()),
+    path('author_books/', views.AuthorsBooks3.as_view(), name='all_author_books'),
+    path('author_books_ajax/', views.AuthorsBooks3Ajax.as_view(), name='all_author_books_ajax'),
+    path('author_books/?<str:author_id>/', views.AuthorsBooks3.as_view(), name='author_books'),
+    # path('list_rep/', views.GitRepos.as_view(), name='reps'),
+
 
 ]

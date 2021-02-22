@@ -45,8 +45,10 @@ INSTALLED_APPS = [
     'managebook',
 
 ]
-
+"branch B"
 MIDDLEWARE = [
+    'django.middleware.http.ConditionalGetMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, User
 from django.forms import ModelForm, Textarea, TextInput, SelectMultiple
 from django import forms
 
-from managebook.models import Book, Comment
+from managebook.models import Book, Comment, User
 
 
 class BookForm(ModelForm):
@@ -52,5 +52,5 @@ class CustomAuthenticationForm(AuthenticationForm):
     password = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password','class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'class': 'form-control'}),
     )
