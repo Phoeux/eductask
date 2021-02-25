@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models, IntegrityError, transaction
 
@@ -8,6 +10,7 @@ class User(AbstractUser):
     git_username = models.CharField(max_length=40, blank=True, default=None, null=True)
     git_repos_num = models.PositiveIntegerField(default=0, blank=True)
     books = models.ManyToManyField('Book', verbose_name="книга", db_index=True, related_name='authors_books')
+
 
 class Genre(models.Model):
     class Meta:
@@ -44,9 +47,17 @@ class Book(models.Model):
     rate = models.ManyToManyField(User, through='managebook.BookLike', related_name='rate')
     cached_rate = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     price = models.PositiveIntegerField(default=0)
+    viewers = models.ManyToManyField(User, through='managebook.BookStat', blank=True, related_name='viewed_books')
+    views = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title if self.title is not None else 'name is not defined'
+
+
+class BookStat(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='users_bookstat')
+    book = models.ForeignKey(Book, on_delete=models.DO_NOTHING, related_name='books_bookstat')
+    view = models.PositiveIntegerField(default=0)
 
 
 class Comment(models.Model):
@@ -106,3 +117,14 @@ class CommentLike(models.Model):
             flag = True
         self.comment.save()
         return flag
+
+
+class BookStatistic(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True, verbose_name="Дата")
+    views = models.IntegerField(default=0, verbose_name='Просмотры')
+    viewer = models.ManyToManyField(User, blank=True, null=True, related_name='bookstat')
+
+
+    def __str__(self):
+        return self.book.title
