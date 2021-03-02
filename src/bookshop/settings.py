@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     # 'social_django',
     'rest_framework',
     'rest_framework.authtoken',
-
     'debug_toolbar',
+    'guardian',
+
     'managebook',
 
 ]
@@ -152,6 +153,7 @@ AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.google.GoogleOAuth2',
     # 'social_core.backends.github.GithubOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
 )
 # SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '871372147885-iop4l64992i7k5c6tht2btump26u8itq.apps.googleusercontent.com' # Google Consumer Key
 # SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '9co0_pFKi-Du8xI-BJ4EyFuR' # Google Consumer Secret
@@ -214,3 +216,4 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 100.0,
     },
 }
+

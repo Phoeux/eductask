@@ -26,8 +26,9 @@ class Genre(models.Model):
 class Book(models.Model):
     class Meta:
         permissions = (
-            ('hide_comments', 'скрыть комменты'),
-            ('is_owner', 'Владелец'),
+        #     ('hide_comments', 'скрыть комменты'),
+        #     ('is_owner', 'Владелец'),
+            ('is_author', 'Автор'),
         )
         verbose_name = 'Книга'
         verbose_name_plural = 'Книги'

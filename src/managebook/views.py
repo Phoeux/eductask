@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, CharField, OuterRef, Exists, Prefetch, Sum, F
+from django.db.models import Count, CharField, OuterRef, Exists, Prefetch, Sum, F, Q, Subquery
 from django.db.models.functions import Cast
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -25,7 +25,7 @@ from managebook.models import BookLike, Book, CommentLike, Comment, Genre, User,
 from managebook.serializer import CustomCommentSerializer, CommentSerializer, BookSerializer, CustomBookSerializer, \
     CustomRateSerializer, BookAPISerializer, AuthorBooksAPISerializer
 from managebook.utils import GitAuth
-
+from guardian.decorators import permission_required_or_403
 
 class BookView(View):
     # @method_decorator(cache_page(5))
@@ -554,15 +554,30 @@ class ListBookStatistics(View):
 
 class RecommendedBooks(View):
     def get(self, request):
-
+        context = {}
         # active_user_books = User.objects.get(id=request.user.id).users_bookstat.values_list('book__title', flat=True)
         active_user_books = User.objects.get(id=request.user.id).users_bookstat.values_list("book_id", flat=True)
-        users_who_also_read_my_books = BookStat.objects.filter(book_id__in=active_user_books).exclude(
+        # """1й вариант"""
+        # users_who_also_read_my_books = BookStat.objects.filter(book_id__in=active_user_books).exclude(
+        #     user=request.user).distinct().values_list("user__id", flat=True)
+        # book_recommended = BookStat.objects.filter(user_id__in=users_who_also_read_my_books).exclude(
+        #     book_id__in=active_user_books)
+        # df = pd.DataFrame(book_recommended.values("book__title", "view")).groupby("book__title").sum(
+        #     "view").sort_values("view", ascending=False)
+        # new_books = list(df.index)
+        #
+        # """2й вариант без панды"""
+        # book_recommended2 = BookStat.objects.filter(user_id__in=users_who_also_read_my_books).exclude(
+        #     book_id__in=active_user_books).values('book__title').annotate(total=Sum('view')).order_by('-total').values(
+        #     'book__title')
+        """3й вариант"""
+        sub_q = BookStat.objects.filter(book_id__in=active_user_books).exclude(
             user=request.user).distinct().values_list("user__id", flat=True)
-        book_recommended = BookStat.objects.filter(user_id__in=users_who_also_read_my_books).exclude(book_id__in=active_user_books)
-        df = pd.DataFrame(book_recommended.values("book__title", "view")).groupby("book__title").sum("view").sort_values("view", ascending=False)
-        new_books = list(df.index)
+        book_recommended3 = BookStat.objects.filter(user_id__in=Subquery(sub_q)).exclude(
+            book_id__in=active_user_books).values('book__title').annotate(
+            total=Sum('view')).order_by('-total').values('book__title')
 
+        context.update(book_recommended2=book_recommended3)
         # for user in User.objects.all().exclude(id=request.user.id):
         #     if user.users_bookstat.values_list('book__title', flat=True).exists():
         #         book = set(i.book.title for i in user.users_bookstat.all())-set(i.book.title for i in active_user_books)
@@ -588,7 +603,7 @@ class RecommendedBooks(View):
         #         users_data.update(user_viewed_books_list=user_viewed_books_list)
         #         context.append(users_data)
 
-        return render(request, 'recommended_books.html', {'context':new_books})
+        return render(request, 'recommended_books.html', context)
 
 
 class BookStatistics(View):
