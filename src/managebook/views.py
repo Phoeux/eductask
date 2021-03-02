@@ -27,6 +27,7 @@ from managebook.serializer import CustomCommentSerializer, CommentSerializer, Bo
 from managebook.utils import GitAuth
 from guardian.decorators import permission_required_or_403
 
+
 class BookView(View):
     # @method_decorator(cache_page(5))
     # @permission_required('managebook.is_owner')
@@ -495,45 +496,6 @@ class AllBooksApi(viewsets.ModelViewSet):
 class AuthorBooksAPI(viewsets.ModelViewSet):
     serializer_class = AuthorBooksAPISerializer
     queryset = User.objects.all()
-
-
-class BookStatView(View):
-    # template_name = 'bookview.html'
-
-    def get(self, request, *args, **kwargs):
-        book = get_object_or_404(Book, id=self.kwargs['book_id'])
-        context = {}
-
-        obj, created = BookStatistic.objects.get_or_create(
-            defaults={
-                'book': book,
-                'date': timezone.now()
-            },
-            date=timezone.now(), book=book
-        )
-        obj.views += 1
-        obj.save(update_fields=['views'])
-
-        popular = BookStatistic.objects.all().values('book_id', 'book__title').annotate(views=Sum('views')). \
-            order_by('-views')
-        context['popular_list'] = popular
-        # cont = []
-        # viewer_data = {}
-
-        # if request.user.is_authenticated:
-        #     viewer = User.objects.get(id=request.user.id)
-        #     # user_views = User.objects.get(id=request.user.id)
-        #     viewer_data['viewer'] = viewer
-        #     # aggregated_data = User.objects.filter(id=request.user.id).annotate(views=Sum('bookstat__views'), views_user=F('views')+1)
-        #     aggregated_data = Book.objects.filter(id=self.kwargs['book_id']).annotate(views=Sum('bookstatistic__views'), user_views=F('bookstatistic__views')+1)
-        #     for data in aggregated_data:
-        #         viewer_data.update(views=data.views)
-        #         viewer_data.update(user_views=data.user_views)
-
-        #     viewer_data.update(views_user=data.views_user)
-        #     cont.append(viewer_data)
-        # return render(request, 'bookview.html', {'context': cont})
-        return render(request, 'bookview.html', context=context)
 
 
 class BookDetail(View):
