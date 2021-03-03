@@ -1,0 +1,16 @@
+{% extends 'main_template.html' %}
+
+{% block recommended_books %}
+<a href="{% url 'hello' %}"><h4>Главная</h4></a> <br><br>
+    Список рекомендованных книг<br>
+    <ol>
+<!--        {% for item in book_recommended2 %}-->
+<!--            <li>{{ item }}</li>-->
+<!--        {% endfor %}-->
+        {% for item in book_recommended2 %}
+            {% for key, value in item.items %}
+                <li>{{ value }}</li>
+             {% endfor %}
+        {% endfor %}
+    </ol>
+{% endblock %}

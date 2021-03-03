@@ -1,0 +1,79 @@
+{% extends 'main_template.html' %}
+
+{% block book_detail %}
+
+<a href="{% url 'hello' %}"><h4>Главная</h4></a>
+<a href="{% url 'book_stat_list' %}"><h3>Самые популярные книги</h3></a> <br><br>
+    Название книги: {{ book_title }} <br>
+    Количество просмотров: {{ book_views }}<br>
+<hr>
+    Просматривающий пользователь: {{ user_stat_username }}<br>
+    Количество просмотров пользователя данной книги: {{ user_stat_view }}<br>
+<hr>
+    Список пользователей просмотревших книгу:
+        {% for username in users_username %}
+            {{ username }}
+        {% endfor %}
+
+<div class="book_container">
+
+{% for book in book %}
+    <h1> {{ book.title }} </h1>
+    <h5>Views: {{ book.views }} </h5>
+    <h5> {{ book.text }} </h5>
+
+
+    <div>
+        <h5> Rate: {{ book.cached_rate }} </h5>
+        {% for i in '0123456789'|make_list %}
+            {% if book.user_rate >= i %}
+                <span class="book_rate fa fa-star checked" id="br-{{ book.id }}-{{ i }}"></span>
+            {% else %}
+                <span class="book_rate fa fa-star" id="br-{{ book.id }}-{{ i }}"></span>
+            {% endif %}
+
+        {% endfor %}
+             {% for u in book.rate.all %}
+                <span>
+                    {{ u.username }}
+                </span>
+             {% endfor %}
+    </div>
+
+    <h5> Date: {{ book.publish_date }} </h5>
+    <h5> Authors: {% for author in book.author.all %}
+        {{ author.username }}
+        {% endfor %}</h5>
+    <h5> Genres: {% for genre in book.genre.all%}
+        {{ genre.title }}
+        {% endfor %}
+    </h5>
+
+    <hr>
+    <div class="comment_container" id="{{ book.slug }}">
+    {% for c in book.comment.all %}
+        <div>
+            <h5>{{ c.text }}</h5>
+            <h5>Date: {{ c.date }}</h5>
+            <h5>Author: {{ c.user }}</h5>
+
+            <div>
+                <span class="comment_like fa {% if c.is_liked %} fa-star checked {% endif %}" id="cl-{{ c.id }}">
+                    Like: {{ c.cashed_like }}
+                </span>
+                        {% for u in c.like.all %}
+                            <span class="col">{{ u.username }}</span>
+                        {% endfor %}
+            </div>
+
+            {% if c.is_owner %}
+                <p><a href="{% url 'update_comment' comment_id=c.id %}"> Update comment</a>
+                <button class="delete-comment" id="dc-{{ c.id }}"> Delete comment </button>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

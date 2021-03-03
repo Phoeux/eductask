@@ -1,3 +1,4 @@
+from django.conf.urls import url
 from django.urls import path, include
 from django.views.decorators.cache import cache_page
 from rest_framework.routers import DefaultRouter
@@ -41,5 +42,10 @@ urlpatterns = [
     path('author_books/?<str:author_id>/', views.AuthorsBooks3.as_view(), name='author_books'),
     # path('list_rep/', views.GitRepos.as_view(), name='reps'),
 
+    # url(r'^(?P<book_id>[0-9]+)/$', views.BookStatView.as_view(), name='book_stat'),
 
+    path('book_stat_list/', views.ListBookStatistics.as_view(), name='book_stat_list'),
+    path('book_stat/<int:book_id>', views.BookStatistics.as_view(), name='book_stat'),
+    path('recommended_books/',views.RecommendedBooks.as_view(), name='recommended_books')
+    # path('book_list_stat/<int:book_id>/', views.BookStatView.as_view(), name='book_stat')
 ]

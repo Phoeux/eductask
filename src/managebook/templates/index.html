@@ -1,6 +1,9 @@
 {% extends 'main_template.html' %}
 
+
 {% block index %}
+{% load guardian_tags %}
+
 {% for p in count_page %}
 <a href="{% url 'hello_with_num_page' num_page=p %}"> page number {{ p }}</a>
 {% endfor %} <br>
@@ -14,16 +17,15 @@
     <br>
 <!--    <form action="/shop/author_books/" method="get">-->
     <form onsubmit="author_book_search(this); return false;">
-
         {% for author_id in author %}
-             <input type="checkbox" class='author_id' value="{{ author_id.id }}">{{ author_id }} <br>
+             <input type="checkbox" class='author_id' value="{{ author_id.id }}" name="{{ author_id.id }}">{{ author_id }} <br>
         {% endfor %}
         <p><input type="submit" value="Отправить"></p>
-
     </form>
-
 </div>
 
+<a href="{% url 'book_stat_list' %}"> <h3>Самые популярные книги</h3></a>
+<a href="{% url 'recommended_books' %}"> <h3>Рекомендованные книги</h3></a>
 {% if user.is_authenticated %}
 <br> <h4><u> Logged as: {{ user }}</u><br><br>
 <!--    <a href="{% url 'add_book' %}">Add a New Book</a>-->
@@ -49,12 +51,14 @@
 
     <div class="book_container">
     {% for book in content %}
-        <h1> {{ book.title }} </h1>
-        {% if book.is_owner %}
+        <a href="{% url 'book_stat' book_id=book.id %}"><h1> {{ book.title }} </h1></a>
+        <h5>Views: {{ book.views }} </h5>
+        {% if book.is_author %}
         <p><a href="{% url 'delete_book_api' book_id=book.id %}">delete this book</a></p>
         <p><a href="{% url 'update_book_api' slug=book.slug %}">update this book</a></p>
         {% endif %}
         <h5> {{ book.text }} </h5>
+
 
         <div>
             <h5> Rate: {{ book.cached_rate }} </h5>
@@ -82,6 +86,7 @@
             {% endfor %}
         </h5>
 
+        <hr>
         <div class="comment_container" id="{{ book.slug }}">
         {% for c in book.comment.all %}
             <div>
@@ -107,6 +112,7 @@
             </div>
 
 
+            <hr>
             <hr>
             {% if user.is_authenticated %}
     <!--            <form action="{%  url 'add_comment' book_id=book.id %}" method="post">-->

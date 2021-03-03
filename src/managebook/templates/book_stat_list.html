@@ -1,0 +1,13 @@
+{% extends 'main_template.html' %}
+
+{% block book_stat_list %}
+
+<a href="{% url 'hello' %}"><h4>Главная</h4></a> <br><br>
+
+    Название книги: ---- просмотров<br>
+    <ol>{% for item in popular_list %}
+        <li><a href="{% url 'book_stat' book_id=item.0 %}">{{ item.1 }}</a> ---- {{ item.2 }}</li>
+    {% endfor %}</ol>
+
+
+{% endblock %}
